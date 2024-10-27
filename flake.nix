@@ -12,7 +12,8 @@
   , rust-overlay
   , flake-utils
   , ... }:
-  flake-utils.lib.eachDefaultSystem (system:
+  let
+  outputs = flake-utils.lib.eachDefaultSystem (system:
   let
     pkgs = import nixpkgs {
       inherit system;
@@ -75,5 +76,13 @@
         program = "${jay-package}/bin/jay";
       };
     }
+
   );
+  in
+  outputs 
+  {
+    overlays.default = final: prev: {
+        jay-git = outputs.packages.${prev.system};
+    };
+  };
 }
