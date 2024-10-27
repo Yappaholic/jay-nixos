@@ -62,7 +62,9 @@
         ];
         runtimeDependencies = with pkgs;[
           libglvnd
-          vulkan-loader
+          libGL 
+          vulkan-loader 
+          vulkan-validation-layers # For NVK 
         ];
       };
     jay-package = pkgs.callPackage jay-compositor {};
