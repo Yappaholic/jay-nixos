@@ -22,7 +22,7 @@
 
     jay-compositor =
       { rustPlatform
-      , git }:
+      }:
       rustPlatform.buildRustPackage rec {
         version = (builtins.fromTOML (builtins.readFile "${src}/Cargo.toml")).package.version;
         pname = "jay";
@@ -39,34 +39,30 @@
 
         SHADERC_LIB_DIR = "${lib.getLib pkgs.shaderc}/lib";
 
-        BuildInputs = with pkgs; [
-          libGL 
-          vulkan-loader 
-          vulkan-validation-layers # For NVK 
-          autoPatchelfHook
-        ];
         nativeBuildInputs = with pkgs;[
-          git
-          libinput
-          mesa
-          libxkbcommon 
-          udev
-          pango 
-          shaderc
-          (
+          autoPatchelfHook
+           (
               rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
                 extensions = [ "rust-src" ];
                 targets = [ "x86_64-unknown-linux-gnu" ];
               })
             )        
         ];
+
+        buildInputs = with pkgs;[
+          libGL
+          libxkbcommon
+          mesa
+          pango
+          udev
+          libinput
+          shaderc
+        ];
+
         runtimeDependencies = with pkgs;[
           libglvnd
-          libGL 
-          vulkan-loader 
-          vulkan-validation-layers # For NVK 
-        ];
-      };
+          vulkan-loader
+        ];      };
     jay-package = pkgs.callPackage jay-compositor {};
     in
     {
