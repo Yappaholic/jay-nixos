@@ -3,30 +3,28 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
-    fenix.inputs.nixpkgs.follows = "nixpkgs";
-    fenix.url = "github:nix-community/fenix";
+    rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = 
   { nixpkgs
-  , fenix
+  , rust-overlay
   , flake-utils
   , ... }:
   flake-utils.lib.eachDefaultSystem (system:
   let
     pkgs = import nixpkgs {
       inherit system;
-      overlays = [fenix.overlays.default];
+      overlays = [(import rust-overlay)];
     };
+    lib = nixpkgs.lib;
 
     jay-compositor =
       { rustPlatform
-      , git
-      ,
-      }:
+      , git }:
       rustPlatform.buildRustPackage rec {
-        version = (builtins.fromTOML (builtins.readFile "${src}/jay/Cargo.toml")).package.version;
+        version = (builtins.fromTOML (builtins.readFile "${src}/Cargo.toml")).package.version;
         pname = "jay";
         src = pkgs.fetchFromGitHub {
           owner = "mahkoh";
@@ -38,8 +36,34 @@
           lockFile = "${src}/Cargo.lock";
         };
         cargoBuildFlags = ["--locked"];
-        BuildInputs = with pkgs; [wayland xwayland];
-        nativeBuildInputs = with pkgs;[git pkg-config libinput mesa libxkbcommon systemd pango shaderc];
+
+        SHADERC_LIB_DIR = "${lib.getLib pkgs.shaderc}/lib";
+
+        BuildInputs = with pkgs; [
+          libGL 
+          vulkan-loader 
+          vulkan-validation-layers # For NVK 
+          autoPatchelfHook
+        ];
+        nativeBuildInputs = with pkgs;[
+          git
+          libinput
+          mesa
+          libxkbcommon 
+          udev
+          pango 
+          shaderc
+          (
+              rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+                extensions = [ "rust-src" ];
+                targets = [ "x86_64-unknown-linux-gnu" ];
+              })
+            )        
+        ];
+        runtimeDependencies = with pkgs;[
+          libglvnd
+          vulkan-loader
+        ];
       };
     jay-package = pkgs.callPackage jay-compositor {};
     in
