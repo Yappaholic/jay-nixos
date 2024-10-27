@@ -29,8 +29,8 @@
         src = pkgs.fetchFromGitHub {
           owner = "mahkoh";
           repo = "jay";
-          rev = "163bb2c893ded86d405923cb19d539be8bbe0413";
-          hash = "sha256-fzn9vu+6ccg2WrlQiC4XNQ0MKmTs6axhrN1Oek/OxaQ=";
+          rev = "v1.7.0";
+          sha256 = "0c6m3vsb2gfr3b4bmaysa90flfifzbdmczs8rr4wipw837v3j22l";
         };
         cargoLock = {
           lockFile = "${src}/Cargo.lock";
@@ -54,6 +54,7 @@
           libxkbcommon
           mesa
           pango
+          cairo
           udev
           libinput
           shaderc
@@ -61,8 +62,13 @@
 
         runtimeDependencies = with pkgs;[
           libglvnd
+          wayland
+          xwayland
+          libGL
+          mesa
           vulkan-loader
-        ];      };
+        ];      
+    };
     jay-package = pkgs.callPackage jay-compositor {};
     in
     {
